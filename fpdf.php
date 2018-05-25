@@ -1911,44 +1911,6 @@ class FPDF
 		$this->state = 3;
 	}
 
-	function DefaultTable($header, $data, $widths = array(), $height = 12, $headerHeight = 7, $marginLeft = 20)
-	{
-		$totalheight = $this->GetY();
-
-		// Header
-		$longestHeader = GetLongestString($header);
-		$times = floor($this->GetStringWidth($row[$longestHeader]) / $widths[$longestHeader]) + 1;
-		for($i=0;$i<count($header);$i++)
-		{
-			$this->MultiAlignCell($w[$i],$headerHeight * $times,$header[$i],1,0);
-		}
-		$this->Ln();
-		$totalheight += $headerHeight * $times;
-
-		// Data
-		foreach($data as $row)
-		{
-			$this->SetX($marginLeft);
-
-			$times = floor($this->GetStringWidth($row[1]) / $widths[1]) + 1;
-
-			$pdf->MultiAlignCell($widths[0],$height * $times,$row[0], 1 , 0);
-
-			$this->MultiAlignCell($widths[1],$height,$row[1],1 , 0);
-
-			$this->MultiAlignCell($widths[2],$height * $times,$row[2],1 , 0);
-
-			$this->MultiAlignCell($widths[3],$height * $times,$row[3],1 , 0);
-			$totalheight += $height * $times; 
-			$this->Ln();
-		}
-		// Closing line
-		$this->SetX($marginLeft);
-		$this->Cell(array_sum($w),0,'','T');
-		
-		return $totalheight;
-	}
-
 	private function GetLongestString($strings)
 	{
 		$indexLongest = 0;
@@ -1961,5 +1923,51 @@ class FPDF
 		}
 		return $indexLongest;
 	}
+
+	function DefaultTable($header, $data, $widths = array(), $height = 12, $headerHeight = 7, $marginLeft = 20, $marginFromHeader = 0)
+	{
+		$totalheight = $this->GetY();
+		$this->SetX($marginLeft);
+		$this->SetFillColor(255,0,0);
+		$this->SetDrawColor(128,0,0);
+		$this->SetLineWidth(.3);
+		$this->SetFont('','B');
+
+		// Header
+		$longestHeader = $this->GetLongestString($header);
+		$times = floor($this->GetStringWidth($header[$longestHeader]) / $widths[$longestHeader]) + 1;
+		for($i=0;$i<count($header);$i++)
+		{
+			$this->MultiAlignCell($widths[$i],$headerHeight * $times,$header[$i],1,0);
+		}
+		$this->Ln();
+		$totalheight += $headerHeight * $times + $marginFromHeader;
+
+		$this->SetY($this->GetY() + $marginFromHeader);
+		// Data
+		foreach($data as $row)
+		{
+			$this->SetX($marginLeft);
+
+			$longestHeader = $this->GetLongestString($row);
+
+			$times = ($this->GetStringWidth($row[$longestHeader]) / $widths[$longestHeader] >= 0.6 ? 1 : 0) + 1;
+			for($i=0;$i<count($row);$i++)
+			{
+
+				$this->MultiAlignCell($widths[$i],$height * ($i == $longestHeader ? 1 : $times),$row[$i], 1 , 0);
+
+			}
+			$totalheight += $height * $times; 
+			$this->Ln();
+		}
+		// Closing line
+		$this->SetX($marginLeft);
+		$this->Cell(array_sum($widths),0,'','T');
+		
+		return $totalheight;
+	}
+
+
 }
 ?>
