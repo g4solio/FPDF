@@ -768,7 +768,7 @@ class FPDF
 		$this->x = $this->lMargin;
 	}
 
-	function MultiAlignCell($w,$h,$text,$border=0,$ln=0,$align='C',$fill=false)
+	function MultiAlignCell($w,$h,$text,$border=0,$ln=0,$align='J',$fill=false)
 	{
 		// Store reset values for (x,y) positions
 		$x = $this->GetX();
@@ -1911,20 +1911,28 @@ class FPDF
 		$this->state = 3;
 	}
 
-	private function GetLongestString($strings)
+
+	function getHigestCell($height, $strings, $widths)
 	{
-		$indexLongest = 0;
-		for($i=0; $i<count($strings); $i++)
-		{
-			if($this->GetStringWidth($strings[$indexLongest]) < $this->GetStringWidth($strings[$i]))
+		$higestCell = $height;
+		for ($i=0; $i < count($strings) ; $i++) 
+		{ 
+			$times = $this->GetStringWidth($strings[$i]) / $widths[$i] + 1;
+			// var_dump($this->GetStringWidth($strings[$i]) / $widths[$i] * 2);
+			// var_dump($times);
+
+			$cellHeight = $height * $times;
+			if( $cellHeight <= $higestCell)
 			{
-				$indexLongest = $i;
+				continue;
 			}
+			$higestCell = $cellHeight;
 		}
-		return $indexLongest;
+
+		return $higestCell;
 	}
 
-	function DefaultTable($header, $data, $widths = array(), $height = 12, $headerHeight = 7, $marginLeft = 20, $marginFromHeader = 0)
+	function DefaultTable($header, $data, $widths = array(), $height = 7, $headerHeight = 7, $marginLeft = 20, $marginFromHeader = 0)
 	{
 		$totalheight = $this->GetY();
 		$this->SetX($marginLeft);
@@ -1933,15 +1941,14 @@ class FPDF
 		$this->SetLineWidth(.3);
 		$this->SetFont('','B');
 
-		// Header
-		$longestHeader = $this->GetLongestString($header);
-		$times = floor($this->GetStringWidth($header[$longestHeader]) / $widths[$longestHeader]) + 1;
+		//Header
+		$heightHeader = $this->getHigestCell($headerHeight, $header, $widths);
 		for($i=0;$i<count($header);$i++)
 		{
-			$this->MultiAlignCell($widths[$i],$headerHeight * $times,$header[$i],1,0);
+			$this->MultiAlignCell($widths[$i],$heightHeader,$header[$i],1,0);
 		}
 		$this->Ln();
-		$totalheight += $headerHeight * $times + $marginFromHeader;
+		$totalheight += $heightHeader + $marginFromHeader;
 
 		$this->SetY($this->GetY() + $marginFromHeader);
 		// Data
@@ -1949,16 +1956,13 @@ class FPDF
 		{
 			$this->SetX($marginLeft);
 
-			$longestHeader = $this->GetLongestString($row);
-
-			$times = ($this->GetStringWidth($row[$longestHeader]) / $widths[$longestHeader] >= 0.6 ? 1 : 0) + 1;
+			$heightCell = $this->getHigestCell($height, $row, $widths);
 			for($i=0;$i<count($row);$i++)
 			{
-
-				$this->MultiAlignCell($widths[$i],$height * ($i == $longestHeader ? 1 : $times),$row[$i], 1 , 0);
+				$this->MultiAlignCell($widths[$i],$heightCell,$row[$i], 1 , 0);
 
 			}
-			$totalheight += $height * $times; 
+			$totalheight += $heightCell; 
 			$this->Ln();
 		}
 		// Closing line
@@ -1967,6 +1971,8 @@ class FPDF
 		
 		return $totalheight;
 	}
+
+
 
 
 }

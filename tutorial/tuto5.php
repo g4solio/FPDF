@@ -19,7 +19,7 @@ $header = array('Country', 'Capital', 'Area (sq km)', 'Pop. (thousands)');
 $data = LoadData('countries.txt');
 $pdf->SetFont('Arial','',14);
 $pdf->AddPage();
-$pdf->DefaultTable($header,$data,array(40, 40, 40, 40));
+$pdf->DefaultTable($header,$data,array(40, 40, 40, 60));
 
 $pdf->Output();
 ?>
